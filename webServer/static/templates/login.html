@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет</title>
+    <!-- Подключение Bootstrap CSS -->
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <!-- Заголовок страницы -->
+                <h1 class="text-center mb-4">Личный кабинет</h1>
+
+                <!-- Карточка с формой входа -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h2 class="h5 text-center mb-0">Авторизация</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="POST" action="/login">
+                            <!-- Поле ввода логина -->
+                            <div class="mb-3">
+                                <input
+                                    type="text"
+                                    class="form-control form-control-lg"
+                                    name="username"
+                                    placeholder="Username"
+                                    required
+                                >
+                            </div>
+
+                            <!-- Поле ввода пароля -->
+                            <div class="mb-3">
+                                <input
+                                    type="password"
+                                    class="form-control form-control-lg"
+                                    name="password"
+                                    placeholder="Password"
+                                    required
+                                >
+                            </div>
+
+                            <!-- Кнопка отправки формы -->
+                            <button
+                                type="submit"
+                                class="btn btn-primary w-100 btn-lg"
+                            >
+                                Login
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключение Bootstrap JS (опционально) -->
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
