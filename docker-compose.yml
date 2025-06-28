@@ -14,8 +14,10 @@ services:
     build: ./webServer
     volumes:
       - ./webServer:/app
+      - ./logs/web:/app/python_backend
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/users
+      TZ: Europe/Moscow
     depends_on:
       - db
     expose:
