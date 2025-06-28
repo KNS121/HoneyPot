@@ -6,6 +6,9 @@ from sqlalchemy import create_engine, Column, Integer, String, Boolean, text
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 import os
 
+import logging
+from datetime import datetime
+
 app = FastAPI()
 #app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -41,6 +44,17 @@ def init_db():
 async def startup_event():
     init_db()
 
+    log_dir = "python_backend"
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir, exist_ok=True)
+
+    logging.basicConfig(
+        filename=os.path.join(log_dir, 'auth.log'),
+        level=logging.INFO,
+        format='%(asctime)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
 
 def get_db():
     db = SessionLocal()
@@ -62,6 +76,9 @@ async def vulnerable_login(
         password: str = Form(...)
 ):
     try:
+
+        client_ip = request.client.host if request.client else "unknown"
+
         query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
 
         with engine.connect() as conn:
@@ -69,11 +86,20 @@ async def vulnerable_login(
             user = result.fetchone()
 
         if user:
-            # Простой редирект без параметров
+            
+            logging.warning(f"SUCCESS - username: {username}, password: {password}")
+
             return RedirectResponse(url="/welcome", status_code=status.HTTP_303_SEE_OTHER)
+        
+
+        logging.warning(f"FAILURE - username: {username}, password: {password}")
+
         return {"status": "error", "message": "Invalid credentials"}
 
     except Exception as e:
+
+        logging.error(f"ERROR - Username: {username}, IP: {client_ip}, Error: {str(e)}")
+        
         raise HTTPException(status_code=500, detail=str(e))
     
 
