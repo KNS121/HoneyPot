@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, text
@@ -61,7 +62,6 @@ async def vulnerable_login(
         password: str = Form(...)
 ):
     try:
-        # Vulnerable SQL query
         query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
 
         with engine.connect() as conn:
@@ -69,8 +69,14 @@ async def vulnerable_login(
             user = result.fetchone()
 
         if user:
-            return {"status": "success", "user": dict(zip(result.keys(), user))}
+            # Простой редирект без параметров
+            return RedirectResponse(url="/welcome", status_code=status.HTTP_303_SEE_OTHER)
         return {"status": "error", "message": "Invalid credentials"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.get("/welcome", response_class=HTMLResponse)
+async def welcome_page(request: Request):
+    return templates.TemplateResponse("welcome.html", {"request": request})
