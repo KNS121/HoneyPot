@@ -27,8 +27,12 @@ services:
       - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./logs/nginx:/var/log/nginx
+    environment:
+      TZ: Europe/Moscow
     depends_on:
       - web
+
 
 volumes:
   postgres_data:
