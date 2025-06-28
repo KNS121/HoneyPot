@@ -23,6 +23,8 @@ func ParseNginxLine(line string) (NginxLog, error) {
 		return NginxLog{}, err
 	}
 
+	log.TimeLocal, _, _ = strings.Cut(log.TimeLocal, " ")
+
 	log.IsLogin = strings.HasPrefix(log.Request, "POST") && 
 	              strings.Contains(log.Request, "/login")
 	
