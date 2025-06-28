@@ -6,8 +6,8 @@ from sqlalchemy.orm import sessionmaker, Session, declarative_base
 import os
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="/app/static/templates")
+#app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@db:5432/users")
 engine = create_engine(DATABASE_URL)
@@ -29,8 +29,8 @@ def init_db():
 
     with SessionLocal() as db:
         db.add_all([
-            User(username='ivanov.ii@gmail.com', password='password', is_admin=True),
-            User(username='admin', password='admin'),
+            User(username='ivanov.ii@gmail.com', password='password'),
+            User(username='admin', password='admin', is_admin=True),
             User(username='andreev.aa@gmail.com', password='andreev')
         ])
         db.commit()
@@ -55,42 +55,22 @@ async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 @app.post("/login")
-async def secure_login(
+async def vulnerable_login(
+        request: Request,
         username: str = Form(...),
-        password: str = Form(...),
-        db: Session = Depends(get_db)
+        password: str = Form(...)
 ):
     try:
-        # long login -> neaa :D
-        if len(username) < 3 or len(username) > 20:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username must be 3-20 characters"
-            )
+        # Vulnerable SQL query
+        query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
 
-        # security query
-        user = db.query(User).filter(
-            User.username == username,
-            User.password == password
-        ).first()
+        with engine.connect() as conn:
+            result = conn.execute(text(query))
+            user = result.fetchone()
 
-        # standart answer
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials"
-            )
+        if user:
+            return {"status": "success", "user": dict(zip(result.keys(), user))}
+        return {"status": "error", "message": "Invalid credentials"}
 
-        return {
-            "status": "success",
-            "username": user.username,
-            "is_admin": user.is_admin
-        }
-
-    except HTTPException as he:
-        raise he
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
-        )
+        raise HTTPException(status_code=500, detail=str(e))

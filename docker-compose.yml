@@ -7,8 +7,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: users
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -16,12 +14,21 @@ services:
     build: ./webServer
     volumes:
       - ./webServer:/app
-    ports:
-      - "8000:8000"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/users
     depends_on:
       - db
+    expose:
+      - "8000"
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - web
 
 volumes:
   postgres_data:
