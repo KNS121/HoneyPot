@@ -81,7 +81,7 @@ async def startup_event():
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
-    file_handler = logging.FileHandler(os.path.join(log_dir, 'auth.log'))
+    file_handler = logging.FileHandler(os.path.join(log_dir, 'auth.log'), delay=False)
     file_handler.setFormatter(JSONFormatter())
 
     logger.addHandler(file_handler)
