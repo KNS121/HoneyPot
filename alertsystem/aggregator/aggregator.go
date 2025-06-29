@@ -50,6 +50,8 @@ func (a *Aggregator) ProcessLog(entry parser.LogEntry) {
 	}
 }
 
+
+
 func (a *Aggregator) processWebLog(log parser.WebServiceLog) {
 	now := time.Now()
 	
