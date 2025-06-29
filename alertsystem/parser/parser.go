@@ -7,12 +7,13 @@ type LogEntry interface {
 }
 
 type Alert struct {
-	Type       string `json:"type"`
-	Date       string `json:"date"`
-	RemoteAddr string `json:"remote_addr,omitempty"`
-	Action     string `json:"action"`
-	Status     string `json:"status,omitempty"`
-	Username   string `json:"username"`
-	Password   string `json:"password,omitempty"`
-	Count      int    `json:"count,omitempty"`
+    Type       string `json:"type"`
+    Date       string `json:"date"`
+    RemoteAddr string `json:"remote_addr,omitempty"`
+    Action     string `json:"action"`
+    Username   string `json:"username,omitempty"`
+    Password   string `json:"password,omitempty"`
+    Status     string `json:"status,omitempty"`
+    Count      int    `json:"count,omitempty"`
+    CommonPassword string `json:"common_password,omitempty"` // Для password spraying
 }
