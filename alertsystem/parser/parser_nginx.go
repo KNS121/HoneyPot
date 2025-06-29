@@ -1,10 +1,10 @@
-// parser/parser_nginx.go
 package parser
 
 import (
 	"encoding/json"
 	"net/url"
 	"strings"
+	//"time"
 )
 
 type NginxLog struct {
@@ -13,7 +13,20 @@ type NginxLog struct {
 	Request       string `json:"request"`
 	RequestBody   string `json:"request_body"`
 	Username      string `json:"username"`
-	IsLogin       bool   `json:"is_login"`
+}
+
+func (l NginxLog) IsLogin() bool {
+	return strings.HasPrefix(l.Request, "POST") && 
+	       strings.Contains(l.Request, "/login")
+}
+
+func (l NginxLog) GetUsername() string {
+	return l.Username
+}
+
+func (l NginxLog) GetTime() string {
+	t, _, _ := strings.Cut(l.TimeLocal, " ")
+	return t
 }
 
 func ParseNginxLine(line string) (NginxLog, error) {
@@ -23,12 +36,7 @@ func ParseNginxLine(line string) (NginxLog, error) {
 		return NginxLog{}, err
 	}
 
-	log.TimeLocal, _, _ = strings.Cut(log.TimeLocal, " ")
-
-	log.IsLogin = strings.HasPrefix(log.Request, "POST") && 
-	              strings.Contains(log.Request, "/login")
-	
-	if log.IsLogin {
+	if log.IsLogin() {
 		values, err := url.ParseQuery(log.RequestBody)
 		if err == nil {
 			log.Username = values.Get("username")
