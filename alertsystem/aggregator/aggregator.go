@@ -58,6 +58,11 @@ func (a *Aggregator) processNginxLog(log parser.NginxLog) {
 	if !log.IsLogin() {
 		return
 	}
+
+	authStatus := "failure"
+    	if log.Status == "303" {
+        	authStatus = "success"
+    }
 	
 	// Проверка правил
 	if alert := a.sqlInjRule.Check(log, now); alert != nil {
@@ -80,7 +85,7 @@ func (a *Aggregator) processNginxLog(log parser.NginxLog) {
 		Action:     "login",
 		Username:   log.Username,
 		Password:   log.Password,
-		Status:     log.Status,
+		AuthStatus: authStatus,
 	})
 }
 

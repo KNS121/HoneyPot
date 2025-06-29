@@ -36,6 +36,8 @@ func ParseNginxLine(line string) (NginxLog, error) {
 		return NginxLog{}, err
 	}
 
+	log.TimeLocal, _, _ = strings.Cut(log.TimeLocal, " ")
+
 	if log.IsLogin() {
 		values, err := url.ParseQuery(log.RequestBody)
 		if err == nil {

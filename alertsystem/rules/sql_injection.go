@@ -55,7 +55,7 @@ func (r *SQLInjectionRule) Check(log parser.NginxLog, now time.Time) *parser.Ale
 				RemoteAddr: log.RemoteAddr,
 				Action:     "login",
 				Username:   log.Username,
-				Status:     "attempt",
+				AuthStatus:     "attempt",
 			}
 		}
 	}
