@@ -68,6 +68,16 @@ services:
       - clickhouse
     environment:
       TZ: Europe/Moscow
+
+  notifier:
+    build: ./notifier
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+      CLICKHOUSE_DSN: clickhouse://alerts_user:alerts_password@clickhouse:9000/alerts_db
+    depends_on:
+      - clickhouse
+  
 volumes:
   postgres_data:
   clickhouse_data:

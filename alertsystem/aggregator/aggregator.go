@@ -77,7 +77,7 @@ func (a *Aggregator) processNginxLog(log parser.NginxLog) {
 	
 	// Запись обычного алерта
 	a.writeAlert(parser.Alert{
-		Type:       "alert",
+		Type:       "alert_login",
 		Date:       log.TimeLocal,
 		RemoteAddr: log.RemoteAddr,
 		Action:     "login",
