@@ -1,42 +1,40 @@
+// aggregator/aggregator.go
 package aggregator
 
 import (
+	"alertsystem/clickhouse"
 	"alertsystem/parser"
 	"alertsystem/rules"
-	"bufio"
-	"encoding/json"
-	"os"
+	"context"
 	"time"
+	"log"
 )
 
 type Aggregator struct {
-	alertsFile  *os.File
-	writer      *bufio.Writer
+	chClient    *clickhouse.Client
 	bruteRule   *rules.BruteforceRule
 	sprayRule   *rules.PasswordSprayRule
 	sqlInjRule  *rules.SQLInjectionRule
 	lastCleanup time.Time
+	ctx         context.Context
 }
 
-func New(alertsPath string) (*Aggregator, error) {
-	file, err := os.OpenFile(alertsPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return nil, err
-	}
-
+func New(ctx context.Context, chClient *clickhouse.Client) (*Aggregator, error) {
 	return &Aggregator{
-		alertsFile:  file,
-		writer:      bufio.NewWriter(file),
+		chClient:    chClient,
 		bruteRule:   rules.NewBruteforceRule(),
 		sprayRule:   rules.NewPasswordSprayRule(),
 		sqlInjRule:  rules.NewSQLInjectionRule(),
 		lastCleanup: time.Now(),
+		ctx:         ctx,
 	}, nil
 }
 
 func (a *Aggregator) Close() {
-	a.writer.Flush()
-	a.alertsFile.Close()
+	// Теперь файл не нужен, закрываем ClickHouse клиент
+	if a.chClient != nil {
+		a.chClient.Close()
+	}
 }
 
 func (a *Aggregator) ProcessLog(entry parser.LogEntry) {
@@ -60,9 +58,9 @@ func (a *Aggregator) processNginxLog(log parser.NginxLog) {
 	}
 
 	authStatus := "failure"
-    	if log.Status == "303" {
-        	authStatus = "success"
-    }
+	if log.Status == "303" {
+		authStatus = "success"
+	}
 	
 	// Проверка правил
 	if alert := a.sqlInjRule.Check(log, now); alert != nil {
@@ -90,8 +88,20 @@ func (a *Aggregator) processNginxLog(log parser.NginxLog) {
 }
 
 func (a *Aggregator) writeAlert(alert parser.Alert) {
-	jsonData, _ := json.Marshal(alert)
-	a.writer.Write(jsonData)
-	a.writer.WriteString("\n")
-	a.writer.Flush()
+	chAlert := clickhouse.Alert{
+		Type:           alert.Type,
+		Date:           alert.Date,
+		RemoteAddr:     alert.RemoteAddr,
+		Action:         alert.Action,
+		Username:       alert.Username,
+		Password:       alert.Password,
+		AuthStatus:     alert.AuthStatus,
+		Count:          alert.Count,
+		CommonPassword: alert.CommonPassword,
+	}
+
+	if err := a.chClient.InsertAlert(a.ctx, chAlert); err != nil {
+		// Логируем ошибку, но продолжаем работу
+		log.Printf("Failed to insert alert into ClickHouse: %v", err)
+	}
 }

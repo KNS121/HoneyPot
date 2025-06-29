@@ -34,7 +34,32 @@ services:
       TZ: Europe/Moscow
     depends_on:
       - web
+  
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    ports:
+      - "8123:8123"  # HTTP интерфейс
+      - "9000:9000"  # Native protocol
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    environment:
+      CLICKHOUSE_DB: alerts_db
+      CLICKHOUSE_USER: alerts_user
+      CLICKHOUSE_PASSWORD: alerts_password
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
 
 volumes:
   postgres_data:
+  clickhouse_data:

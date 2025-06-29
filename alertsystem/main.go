@@ -2,17 +2,30 @@ package main
 
 import (
 	"alertsystem/aggregator"
+	"alertsystem/clickhouse"
 	"alertsystem/parser"
 	"alertsystem/watcher"
+	"context"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+	//"time"
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Инициализация клиента ClickHouse
+	chClient, err := clickhouse.New(ctx)
+	if err != nil {
+		log.Fatalf("Failed to create ClickHouse client: %v", err)
+	}
+	defer chClient.Close()
+
 	// Инициализация агрегатора
-	agg, err := aggregator.New("../logs/alerts.log")
+	agg, err := aggregator.New(ctx, chClient)
 	if err != nil {
 		log.Fatalf("Failed to create aggregator: %v", err)
 	}
