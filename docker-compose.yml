@@ -59,7 +59,15 @@ services:
       timeout: 10s
       retries: 5
 
-
+  alertsystem:
+    build: ./alertsystem
+    volumes:
+      - ./logs/nginx:/logs/nginx
+    depends_on:
+      - web
+      - clickhouse
+    environment:
+      TZ: Europe/Moscow
 volumes:
   postgres_data:
   clickhouse_data:

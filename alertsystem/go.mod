@@ -2,11 +2,13 @@ module alertsystem
 
 go 1.24.4
 
-require github.com/fsnotify/fsnotify v1.9.0
+require (
+	github.com/ClickHouse/clickhouse-go/v2 v2.37.2
+	github.com/fsnotify/fsnotify v1.9.0
+)
 
 require (
 	github.com/ClickHouse/ch-go v0.66.1 // indirect
-	github.com/ClickHouse/clickhouse-go/v2 v2.37.2 // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.7.1 // indirect
