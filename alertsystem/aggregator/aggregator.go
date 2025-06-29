@@ -14,6 +14,7 @@ type Aggregator struct {
 	writer      *bufio.Writer
 	bruteRule   *rules.BruteforceRule
 	sprayRule   *rules.PasswordSprayRule
+	sqlInjRule   *rules.SQLInjectionRule
 	lastCleanup time.Time
 }
 
@@ -28,6 +29,7 @@ func New(alertsPath string) (*Aggregator, error) {
 		writer:      bufio.NewWriter(file),
 		bruteRule:   rules.NewBruteforceRule(),
 		sprayRule:   rules.NewPasswordSprayRule(),
+		sqlInjRule:  rules.NewSQLInjectionRule(),
 		lastCleanup: time.Now(),
 	}, nil
 }
@@ -48,11 +50,15 @@ func (a *Aggregator) processWebLog(log parser.WebServiceLog) {
 	now := time.Now()
 	
 	// Периодическая очистка
-	if now.Sub(a.lastCleanup) > 5*time.Minute {
+	if now.Sub(a.lastCleanup) > 2*time.Minute {
 		a.lastCleanup = now
 	}
 	
-	// Проверка правил
+	// Проверка правил (добавлена проверка SQL-инъекции)
+	if alert := a.sqlInjRule.Check(log, now); alert != nil {
+		a.writeAlert(*alert)
+	}
+	
 	if alert := a.bruteRule.Check(log, now); alert != nil {
 		a.writeAlert(*alert)
 	}
