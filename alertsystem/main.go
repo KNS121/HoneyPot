@@ -18,28 +18,17 @@ func main() {
 	}
 	defer agg.Close()
 
-	// Обработчик для веб-логов
-	webHandler := func(line string) {
-		logEntry, err := parser.ParseWebServiceLine(line)
-		if err != nil {
-			log.Printf("Failed to parse web log: %v", err)
-			return
-		}
-		agg.ProcessLog(logEntry)
-	}
-
 	// Обработчик для nginx логов
 	nginxHandler := func(line string) {
-		_, err := parser.ParseNginxLine(line)
+		nginxLog, err := parser.ParseNginxLine(line)
 		if err != nil {
 			log.Printf("Failed to parse nginx log: %v", err)
 			return
 		}
-		// Можно добавить обработку nginx логов при необходимости
+		agg.ProcessLog(nginxLog)
 	}
 
-	// Запуск наблюдателей
-	go watcher.New("../logs/web/auth.log", webHandler).Watch()
+	// Запуск наблюдателя
 	go watcher.New("../logs/nginx/access.log", nginxHandler).Watch()
 
 	log.Println("Alert system started. Press Ctrl+C to stop.")

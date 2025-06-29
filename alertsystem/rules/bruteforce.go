@@ -7,8 +7,8 @@ import (
 
 const (
 	bruteForceAttemptsThreshold = 5
-	bruteForceWindow            = 5 * time.Minute
-	bruteForceAlertCooldown     = 2 * time.Minute
+	bruteForceWindow            = 1 * time.Minute
+	bruteForceAlertCooldown     = 1 * time.Minute
 )
 
 type BruteforceRule struct {
@@ -23,8 +23,9 @@ func NewBruteforceRule() *BruteforceRule {
 	}
 }
 
-func (r *BruteforceRule) Check(log parser.WebServiceLog, now time.Time) *parser.Alert {
-	if log.Status != "failure" {
+func (r *BruteforceRule) Check(log parser.NginxLog, now time.Time) *parser.Alert {
+	// Проверяем только логины с неудачным статусом (200)
+	if !log.IsLogin() || log.Status != "200" {
 		return nil
 	}
 
@@ -47,11 +48,12 @@ func (r *BruteforceRule) Check(log parser.WebServiceLog, now time.Time) *parser.
 			delete(r.failedLogins, username)
 			
 			return &parser.Alert{
-				Type:     "bruteforce",
-				Date:     log.TimeLocal,
-				Action:   "login",
-				Username: username,
-				Count:    len(r.failedLogins[username]),
+				Type:       "bruteforce",
+				Date:       log.TimeLocal,
+				RemoteAddr: log.RemoteAddr,
+				Action:     "login",
+				Username:   username,
+				Count:      len(r.failedLogins[username]),
 			}
 		}
 	}

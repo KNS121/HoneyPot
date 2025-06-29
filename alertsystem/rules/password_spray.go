@@ -7,8 +7,8 @@ import (
 
 const (
 	sprayAttemptsThreshold = 2
-	sprayWindow            = 2 * time.Minute
-	sprayAlertCooldown     = 2 * time.Minute
+	sprayWindow            = 1 * time.Minute
+	sprayAlertCooldown     = 1 * time.Minute
 )
 
 type passwordAttempt struct {
@@ -28,8 +28,9 @@ func NewPasswordSprayRule() *PasswordSprayRule {
 	}
 }
 
-func (r *PasswordSprayRule) Check(log parser.WebServiceLog, now time.Time) *parser.Alert {
-	if log.Status != "failure" {
+func (r *PasswordSprayRule) Check(log parser.NginxLog, now time.Time) *parser.Alert {
+	// Проверяем только логины с неудачным статусом (200)
+	if !log.IsLogin() || log.Status != "200" {
 		return nil
 	}
 
@@ -62,6 +63,7 @@ func (r *PasswordSprayRule) Check(log parser.WebServiceLog, now time.Time) *pars
 			return &parser.Alert{
 				Type:           "password_spraying",
 				Date:           log.TimeLocal,
+				RemoteAddr:     log.RemoteAddr,
 				Action:         "login",
 				Count:          len(uniqueUsers),
 				CommonPassword: password,

@@ -14,7 +14,7 @@ type Aggregator struct {
 	writer      *bufio.Writer
 	bruteRule   *rules.BruteforceRule
 	sprayRule   *rules.PasswordSprayRule
-	sqlInjRule   *rules.SQLInjectionRule
+	sqlInjRule  *rules.SQLInjectionRule
 	lastCleanup time.Time
 }
 
@@ -41,12 +41,12 @@ func (a *Aggregator) Close() {
 
 func (a *Aggregator) ProcessLog(entry parser.LogEntry) {
 	switch log := entry.(type) {
-	case parser.WebServiceLog:
-		a.processWebLog(log)
+	case parser.NginxLog:
+		a.processNginxLog(log)
 	}
 }
 
-func (a *Aggregator) processWebLog(log parser.WebServiceLog) {
+func (a *Aggregator) processNginxLog(log parser.NginxLog) {
 	now := time.Now()
 	
 	// Периодическая очистка
@@ -54,7 +54,12 @@ func (a *Aggregator) processWebLog(log parser.WebServiceLog) {
 		a.lastCleanup = now
 	}
 	
-	// Проверка правил (добавлена проверка SQL-инъекции)
+	// Проверяем только логины
+	if !log.IsLogin() {
+		return
+	}
+	
+	// Проверка правил
 	if alert := a.sqlInjRule.Check(log, now); alert != nil {
 		a.writeAlert(*alert)
 	}
@@ -69,12 +74,13 @@ func (a *Aggregator) processWebLog(log parser.WebServiceLog) {
 	
 	// Запись обычного алерта
 	a.writeAlert(parser.Alert{
-		Type:     "alert",
-		Date:     log.TimeLocal,
-		Action:   "login",
-		Username: log.Username,
-		Password: log.Password,
-		Status:   log.Status,
+		Type:       "alert",
+		Date:       log.TimeLocal,
+		RemoteAddr: log.RemoteAddr,
+		Action:     "login",
+		Username:   log.Username,
+		Password:   log.Password,
+		Status:     log.Status,
 	})
 }
 

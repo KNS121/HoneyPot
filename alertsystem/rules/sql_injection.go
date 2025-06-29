@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-// SQL ключевые слова и опасные паттерны для обнаружения
 var sqlPatterns = []string{
 	"' OR '1'='1",
 	"' OR 1=1 --",
@@ -38,19 +37,25 @@ func NewSQLInjectionRule() *SQLInjectionRule {
 	}
 }
 
-func (r *SQLInjectionRule) Check(log parser.WebServiceLog, now time.Time) *parser.Alert {
+func (r *SQLInjectionRule) Check(log parser.NginxLog, now time.Time) *parser.Alert {
+	// Проверяем только логины
+	if !log.IsLogin() {
+		return nil
+	}
+
 	// Проверяем username и password на SQL-инъекции
 	if containsSQLInjection(log.Username) || containsSQLInjection(log.Password) {
 		// Проверяем, не отправляли ли мы уже алерт для этого IP в последние 30 минут
-		if lastAlert, exists := r.alerts[log.Username]; !exists || now.Sub(lastAlert) > 5*time.Second {
-			r.alerts[log.Username] = now
+		if lastAlert, exists := r.alerts[log.RemoteAddr]; !exists || now.Sub(lastAlert) > 1*time.Minute {
+			r.alerts[log.RemoteAddr] = now
 			
 			return &parser.Alert{
-				Type:     "sql_injection",
-				Date:     log.TimeLocal,
-				Action:   "login",
-				Username: log.Username,
-				Status:   "attempt",
+				Type:       "sql_injection",
+				Date:       log.TimeLocal,
+				RemoteAddr: log.RemoteAddr,
+				Action:     "login",
+				Username:   log.Username,
+				Status:     "attempt",
 			}
 		}
 	}
