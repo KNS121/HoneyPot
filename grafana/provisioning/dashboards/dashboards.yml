@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: 'Alerts'
+    type: file
+    updateIntervalSeconds: 10
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: true

@@ -161,7 +161,7 @@ func formatAlertMessage(alert Alert) string {
 		return fmt.Sprintf("🚨 Bruteforce Attempt\n\n"+
 			"⏰ Time: %s\n"+
 			"🌐 IP: %s\n"+
-			"👤 Username: %s\n"+
+			"👤 Username: %s\n",
 			alert.Date.Format("2006-01-02 15:04:05"),
 			alert.RemoteAddr,
 			alert.Username)
